@@ -14,8 +14,8 @@ const medias = (state: Medias = fromJS({}), action: MediasAction) => {
       return newState;
     }
     case ADD_ASSET: {
-      const payload = action.payload as AssetProxy;
-      return state.set(payload.path, payload);
+      const asset = action.payload as AssetProxy;
+      return state.set(asset.path, asset);
     }
     case REMOVE_ASSET: {
       const payload = action.payload as string;

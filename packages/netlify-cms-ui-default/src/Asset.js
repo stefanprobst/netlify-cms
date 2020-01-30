@@ -14,13 +14,12 @@ class Asset extends React.Component {
     value: null,
   };
 
-  _fetchAsset() {
+  async _fetchAsset() {
     const { getAsset, path } = this.props;
-    getAsset(path).then(value => {
-      if (this.subscribed) {
-        this.setState({ value });
-      }
-    });
+    const value = await getAsset(path);
+    if (this.subscribed) {
+      this.setState({ value });
+    }
   }
 
   componentDidMount() {

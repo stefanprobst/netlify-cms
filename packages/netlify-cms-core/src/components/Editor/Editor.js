@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React from 'react';
+import { bindActionCreators } from 'redux';
 import ImmutablePropTypes from 'react-immutable-proptypes';
 import { connect } from 'react-redux';
 import { Loader } from 'netlify-cms-ui-default';
@@ -32,7 +33,7 @@ import {
 import { loadDeployPreview } from 'Actions/deploys';
 import { deserializeValues } from 'Lib/serializeEntryValues';
 import { selectEntry, selectUnpublishedEntry, selectDeployPreview } from 'Reducers';
-import { getAsset } from 'Actions/media';
+import { memoizedGetAsset } from 'Actions/media';
 import { selectFields } from 'Reducers/collections';
 import { status, EDITORIAL_WORKFLOW } from 'Constants/publishModes';
 import EditorInterface from './EditorInterface';
@@ -494,30 +495,36 @@ function mapStateToProps(state, ownProps) {
   };
 }
 
-const mapDispatchToProps = {
-  changeDraftField,
-  changeDraftFieldValidation,
-  loadEntry,
-  loadEntries,
-  loadDeployPreview,
-  loadLocalBackup,
-  retrieveLocalBackup,
-  persistLocalBackup,
-  deleteLocalBackup,
-  createDraftFromEntry,
-  createDraftDuplicateFromEntry,
-  createEmptyDraft,
-  discardDraft,
-  persistEntry,
-  deleteEntry,
-  updateUnpublishedEntryStatus,
-  publishUnpublishedEntry,
-  unpublishPublishedEntry,
-  deleteUnpublishedEntry,
-  logoutUser,
-  boundGetAsset: (collection, entry) => (dispatch, getState) => path => {
-    return getAsset({ collection, entry, path })(dispatch, getState);
-  },
+const mapDispatchToProps = dispatch => {
+  const creators = bindActionCreators(
+    {
+      changeDraftField,
+      changeDraftFieldValidation,
+      loadEntry,
+      loadEntries,
+      loadDeployPreview,
+      loadLocalBackup,
+      retrieveLocalBackup,
+      persistLocalBackup,
+      deleteLocalBackup,
+      createDraftFromEntry,
+      createDraftDuplicateFromEntry,
+      createEmptyDraft,
+      discardDraft,
+      persistEntry,
+      deleteEntry,
+      updateUnpublishedEntryStatus,
+      publishUnpublishedEntry,
+      unpublishPublishedEntry,
+      deleteUnpublishedEntry,
+      logoutUser,
+    },
+    dispatch,
+  );
+  return {
+    ...creators,
+    boundGetAsset: memoizedGetAsset(dispatch),
+  };
 };
 
 const mergeProps = (stateProps, dispatchProps, ownProps) => {

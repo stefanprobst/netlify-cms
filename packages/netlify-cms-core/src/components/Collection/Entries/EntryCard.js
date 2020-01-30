@@ -1,9 +1,9 @@
 import React from 'react';
 import styled from '@emotion/styled';
 import { connect } from 'react-redux';
-import { getAsset } from 'Actions/media';
+import { memoizedGetAsset } from 'Actions/media';
 import { Link } from 'react-router-dom';
-import { colors, colorsRaw, components, lengths, Asset } from 'netlify-cms-ui-default';
+import { colors, colorsRaw, components, lengths } from 'netlify-cms-ui-default';
 import { VIEW_STYLE_LIST, VIEW_STYLE_GRID } from 'Constants/collectionViews';
 import { summaryFormatter } from 'Lib/formatters';
 
@@ -76,16 +76,12 @@ const CardBody = styled.div`
 `;
 
 const CardImage = styled.div`
-  background-image: url(${props => props.value?.toString()});
+  background-image: url(${props => props.src});
   background-position: center center;
   background-size: cover;
   background-repeat: no-repeat;
   height: 150px;
 `;
-
-const CardImageAsset = ({ getAsset, image }) => {
-  return <Asset path={image} getAsset={getAsset} component={CardImage} />;
-};
 
 const EntryCard = ({
   path,
@@ -106,6 +102,9 @@ const EntryCard = ({
     );
   }
 
+  const asset = boundGetAsset(image);
+  const src = asset.toString();
+
   if (viewStyle === VIEW_STYLE_GRID) {
     return (
       <GridCard>
@@ -114,7 +113,7 @@ const EntryCard = ({
             {collectionLabel ? <CollectionLabel>{collectionLabel}</CollectionLabel> : null}
             <CardHeading>{summary}</CardHeading>
           </CardBody>
-          {image ? <CardImageAsset getAsset={boundGetAsset} image={image} /> : null}
+          {image ? <CardImage src={src} /> : null}
         </GridCardLink>
       </GridCard>
     );
@@ -143,10 +142,10 @@ const mapStateToProps = (state, ownProps) => {
   };
 };
 
-const mapDispatchToProps = {
-  boundGetAsset: (collection, entry) => (dispatch, getState) => path => {
-    return getAsset({ collection, entry, path })(dispatch, getState);
-  },
+const mapDispatchToProps = dispatch => {
+  return {
+    boundGetAsset: memoizedGetAsset(dispatch),
+  };
 };
 
 const mergeProps = (stateProps, dispatchProps, ownProps) => {
