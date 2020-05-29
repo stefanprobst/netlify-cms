@@ -77,7 +77,15 @@ const defaultPlugins = [
 const presets = () => {
   return [
     '@babel/preset-react',
-    '@babel/preset-env',
+    process.env.BABEL_MODULES
+      ? '@babel/preset-modules'
+      : [
+          '@babel/preset-env',
+          {
+            targets: { esmodules: true },
+            bugfixes: true,
+          },
+        ],
     [
       '@emotion/babel-preset-css-prop',
       {
