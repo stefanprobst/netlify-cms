@@ -2,12 +2,12 @@
 import { NetlifyCmsCore as CMS } from 'netlify-cms-core';
 
 // Backends
-import { GitHubBackend } from 'netlify-cms-backend-github';
-import { GitLabBackend } from 'netlify-cms-backend-gitlab';
+// import { GitHubBackend } from 'netlify-cms-backend-github';
+// import { GitLabBackend } from 'netlify-cms-backend-gitlab';
 import { GitGatewayBackend } from 'netlify-cms-backend-git-gateway';
-import { BitbucketBackend } from 'netlify-cms-backend-bitbucket';
+// import { BitbucketBackend } from 'netlify-cms-backend-bitbucket';
 import { TestBackend } from 'netlify-cms-backend-test';
-import { ProxyBackend } from 'netlify-cms-backend-proxy';
+// import { ProxyBackend } from 'netlify-cms-backend-proxy';
 
 // Widgets
 import NetlifyCmsWidgetString from 'netlify-cms-widget-string';
@@ -21,10 +21,10 @@ import NetlifyCmsWidgetList from 'netlify-cms-widget-list';
 import NetlifyCmsWidgetObject from 'netlify-cms-widget-object';
 import NetlifyCmsWidgetRelation from 'netlify-cms-widget-relation';
 import NetlifyCmsWidgetBoolean from 'netlify-cms-widget-boolean';
-import NetlifyCmsWidgetMap from 'netlify-cms-widget-map';
-import NetlifyCmsWidgetDate from 'netlify-cms-widget-date';
+// import NetlifyCmsWidgetMap from 'netlify-cms-widget-map';
+// import NetlifyCmsWidgetDate from 'netlify-cms-widget-date';
 import NetlifyCmsWidgetDatetime from 'netlify-cms-widget-datetime';
-import NetlifyCmsWidgetCode from 'netlify-cms-widget-code';
+// import NetlifyCmsWidgetCode from 'netlify-cms-widget-code';
 
 // Editor Components
 import image from 'netlify-cms-editor-component-image';
@@ -34,11 +34,11 @@ import * as locales from 'netlify-cms-locales';
 
 // Register all the things
 CMS.registerBackend('git-gateway', GitGatewayBackend);
-CMS.registerBackend('github', GitHubBackend);
-CMS.registerBackend('gitlab', GitLabBackend);
-CMS.registerBackend('bitbucket', BitbucketBackend);
+// CMS.registerBackend('github', GitHubBackend);
+// CMS.registerBackend('gitlab', GitLabBackend);
+// CMS.registerBackend('bitbucket', BitbucketBackend);
 CMS.registerBackend('test-repo', TestBackend);
-CMS.registerBackend('proxy', ProxyBackend);
+// CMS.registerBackend('proxy', ProxyBackend);
 CMS.registerWidget([
   NetlifyCmsWidgetString.Widget(),
   NetlifyCmsWidgetNumber.Widget(),
@@ -51,18 +51,18 @@ CMS.registerWidget([
   NetlifyCmsWidgetObject.Widget(),
   NetlifyCmsWidgetRelation.Widget(),
   NetlifyCmsWidgetBoolean.Widget(),
-  NetlifyCmsWidgetMap.Widget(),
-  NetlifyCmsWidgetDate.Widget(),
+  // NetlifyCmsWidgetMap.Widget(),
+  // NetlifyCmsWidgetDate.Widget(),
   NetlifyCmsWidgetDatetime.Widget(),
-  NetlifyCmsWidgetCode.Widget(),
+  // NetlifyCmsWidgetCode.Widget(),
 ]);
 CMS.registerEditorComponent(image);
-CMS.registerEditorComponent({
-  id: 'code-block',
-  label: 'Code Block',
-  widget: 'code',
-  type: 'code-block',
-});
+// CMS.registerEditorComponent({
+//   id: 'code-block',
+//   label: 'Code Block',
+//   widget: 'code',
+//   type: 'code-block',
+// });
 Object.keys(locales).forEach(locale => {
   CMS.registerLocale(locale, locales[locale]);
 });
