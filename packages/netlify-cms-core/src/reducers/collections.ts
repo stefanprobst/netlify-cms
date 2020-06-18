@@ -2,7 +2,7 @@ import { List } from 'immutable';
 import { get, escapeRegExp } from 'lodash';
 import consoleError from '../lib/consoleError';
 import { CONFIG_SUCCESS } from '../actions/config';
-import { FILES, FOLDER } from '../constants/collectionTypes';
+import { FILES, FOLDER, FILE } from '../constants/collectionTypes';
 import { INFERABLE_FIELDS, IDENTIFIER_FIELDS, SORTABLE_FIELDS } from '../constants/fieldInference';
 import { formatExtensions } from '../formats/formats';
 import {
@@ -38,6 +38,9 @@ const collections = (state = null, action: CollectionsAction) => {
             }
             if (collection.has('files')) {
               return collection.set('type', FILES);
+            }
+            if (collection.has('file')) {
+              return collection.set('type', FILE);
             }
           })
           // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
@@ -79,6 +82,26 @@ const selectors = {
     },
     allowDeletion(collection: Collection) {
       return collection.get('delete', true);
+    },
+    templateName(collection: Collection) {
+      return collection.get('name');
+    },
+  },
+  [FILE]: {
+    entrySlug(collection: Collection) {
+      return collection.get('name');
+    },
+    fields(collection: Collection) {
+      return collection.get('fields');
+    },
+    entryPath(collection: Collection) {
+      return collection.get('file');
+    },
+    allowDeletion(collection: Collection) {
+      return collection.get('delete', false);
+    },
+    allowNewEntries(collection: Collection) {
+      return collection.get('create', true);
     },
     templateName(collection: Collection) {
       return collection.get('name');

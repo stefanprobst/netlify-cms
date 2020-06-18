@@ -12,7 +12,11 @@ import EntriesCollection from './Entries/EntriesCollection';
 import EntriesSearch from './Entries/EntriesSearch';
 import CollectionControls from './CollectionControls';
 import { sortByField, filterByField } from '../../actions/entries';
-import { selectSortableFields, selectViewFilters } from '../../reducers/collections';
+import {
+  selectAllowNewEntries,
+  selectSortableFields,
+  selectViewFilters,
+} from '../../reducers/collections';
 import { selectEntriesSort, selectEntriesFilter } from '../../reducers/entries';
 import { VIEW_STYLE_LIST } from '../../constants/collectionViews';
 
@@ -73,6 +77,7 @@ class Collection extends React.Component {
 
   render() {
     const {
+      allowNewEntries,
       collection,
       collections,
       collectionName,
@@ -87,7 +92,7 @@ class Collection extends React.Component {
       onFilterClick,
       filter,
     } = this.props;
-    const newEntryUrl = collection.get('create') ? getNewEntryUrl(collectionName) : '';
+    const newEntryUrl = allowNewEntries ? getNewEntryUrl(collectionName) : '';
 
     const searchResultKey =
       'collection.collectionTop.searchResults' + (isSingleSearchResult ? 'InCollection' : '');
@@ -138,8 +143,10 @@ function mapStateToProps(state, ownProps) {
   const sortableFields = selectSortableFields(collection, t);
   const viewFilters = selectViewFilters(collection);
   const filter = selectEntriesFilter(state.entries, collection.get('name'));
+  const allowNewEntries = selectAllowNewEntries(collection);
 
   return {
+    allowNewEntries,
     collection,
     collections,
     collectionName: name,

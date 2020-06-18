@@ -1,4 +1,4 @@
-import { attempt, flatten, isError, uniq } from 'lodash';
+import { attempt, flatten, isError, isPlainObject, uniq } from 'lodash';
 import { List, Map, fromJS } from 'immutable';
 import * as fuzzy from 'fuzzy';
 import { resolveFormat } from './formats/formats';
@@ -48,7 +48,7 @@ import {
   EntryField,
 } from './types/redux';
 import AssetProxy from './valueObjects/AssetProxy';
-import { FOLDER, FILES } from './constants/collectionTypes';
+import { FOLDER, FILES, FILE } from './constants/collectionTypes';
 
 const { extractTemplateVars, dateParsers } = stringTemplate;
 
@@ -137,6 +137,7 @@ interface PersistArgs {
   config: Config;
   collection: Collection;
   entryDraft: EntryDraft;
+  entries?: List<EntryMap>;
   assetProxies: AssetProxy[];
   usedSlugs: List<string>;
   unpublished?: boolean;
@@ -294,12 +295,13 @@ export class Backend {
     // Check for duplicate slug in loaded entities store first before repo
     while (
       usedSlugs.includes(uniqueSlug) ||
-      (await this.entryExist(
-        collection,
-        selectEntryPath(collection, uniqueSlug) as string,
-        uniqueSlug,
-        selectUseWorkflow(config),
-      ))
+      (collection.get('type') !== FILE &&
+        (await this.entryExist(
+          collection,
+          selectEntryPath(collection, uniqueSlug) as string,
+          uniqueSlug,
+          selectUseWorkflow(config),
+        )))
     ) {
       uniqueSlug = `${slug}${sanitizeChar(' ', slugConfig)}${i++}`;
     }
@@ -322,10 +324,31 @@ export class Backend {
       ),
     );
     const formattedEntries = entries.map(this.entryWithFormat(collection));
+
+    let expandedEntries = formattedEntries;
+
+    if (collection.get('type') === FILE) {
+      const entry = formattedEntries[0];
+
+      if (
+        !entry.data ||
+        !isPlainObject(entry.data) ||
+        !isPlainObject(Object.values(entry.data)[0])
+      ) {
+        expandedEntries = [];
+      }
+
+      expandedEntries = Object.entries(entry.data).map(([slug, datum]) => ({
+        ...entry,
+        slug,
+        data: datum,
+      }));
+    }
+
     // If this collection has a "filter" property, filter entries accordingly
     const filteredEntries = collectionFilter
-      ? this.filterEntries({ entries: formattedEntries }, collectionFilter)
-      : formattedEntries;
+      ? this.filterEntries({ entries: expandedEntries }, collectionFilter)
+      : expandedEntries;
     return filteredEntries;
   }
 
@@ -349,6 +372,10 @@ export class Backend {
         }))
         .toArray();
       listMethod = () => this.implementation.entriesByFiles(files);
+    } else if (collectionType === FILE) {
+      const path = collection.get('file')!;
+      const label = collection.get('label');
+      listMethod = () => this.implementation.entriesByFiles([{ path, label }]);
     } else {
       throw new Error(`Unknown collection type: ${collectionType}`);
     }
@@ -629,6 +656,11 @@ export class Backend {
       entry.mediaFiles = entry.mediaFiles.concat(state.mediaLibrary.get('files') || []);
     }
 
+    if (collection.get('type') === FILE) {
+      const data = (entry.slug && entry.data[entry.slug]) || {};
+      return { ...entry, data };
+    }
+
     return entry;
   }
 
@@ -728,6 +760,7 @@ export class Backend {
     config,
     collection,
     entryDraft: draft,
+    entries,
     assetProxies,
     usedSlugs,
     unpublished = false,
@@ -815,6 +848,28 @@ export class Backend {
       await this.invokePrePublishEvent(entryDraft.get('entry'));
     }
 
+    // TODO: integrate into above
+    if (collection.get('type') === FILE) {
+      const data: { [slug: string]: unknown } = {};
+
+      if (entries) {
+        entries.forEach(entry => {
+          data[entry!.get('slug')] = entry!.get('data').toJS();
+        });
+      }
+
+      data[entryObj.slug] = entryDraft.getIn(['entry', 'data']).toJS();
+
+      // TODO: make variant of this.entryToRaw for multiple entries
+      const entry = entryDraft.get('entry');
+      const format = resolveFormat(collection, entry.toJS());
+      const fieldsOrder = this.fieldsOrder(collection, entry);
+      const fieldsComments = selectFieldsComments(collection, entry);
+      const raw = format.toFile(data, fieldsOrder, fieldsComments);
+
+      entryObj.raw = raw;
+    }
+
     await this.implementation.persistEntry(entryObj, assetProxies, opts);
 
     await this.invokePostSaveEvent(entryDraft.get('entry'));
@@ -872,7 +927,7 @@ export class Backend {
     return this.implementation.persistMedia(file, options);
   }
 
-  async deleteEntry(state: State, collection: Collection, slug: string) {
+  async deleteEntry(state: State, collection: Collection, slug: string, entries?: List<EntryMap>) {
     const path = selectEntryPath(collection, slug) as string;
 
     if (!selectAllowDeletion(collection)) {
@@ -896,7 +951,42 @@ export class Backend {
 
     const entry = selectEntry(state.entries, collection.get('name'), slug);
     await this.invokePreUnpublishEvent(entry);
-    const result = await this.implementation.deleteFile(path, commitMessage);
+
+    let result;
+
+    if (collection.get('type') === FILE) {
+      const data: { [slug: string]: unknown } = {};
+
+      if (entries) {
+        entries.forEach(entry => {
+          const entrySlug = entry!.get('slug');
+          if (entrySlug !== slug) {
+            data[entrySlug] = entry!.get('data').toJS();
+          }
+        });
+      }
+
+      const format = resolveFormat(collection, entry.toJS());
+      const fieldsOrder = this.fieldsOrder(collection, entry);
+      const fieldsComments = selectFieldsComments(collection, entry);
+      const raw = format.toFile(data, fieldsOrder, fieldsComments);
+
+      const entryObj = { raw, path, slug };
+
+      // TODO: assetProxies?
+      result = await this.implementation.persistEntry(entryObj, [], {
+        newEntry: false,
+        commitMessage,
+        collectionName: collection.get('name'),
+        // FIXME:
+        useWorkflow: false,
+        // unpublished,
+        // status,
+      });
+    } else {
+      result = await this.implementation.deleteFile(path, commitMessage);
+    }
+
     await this.invokePostUnpublishEvent(entry);
     return result;
   }

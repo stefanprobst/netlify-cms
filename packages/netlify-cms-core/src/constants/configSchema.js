@@ -134,6 +134,7 @@ const getConfigSchema = () => ({
           label_singular: { type: 'string' },
           description: { type: 'string' },
           folder: { type: 'string' },
+          file: { type: 'string' },
           files: {
             type: 'array',
             items: {
@@ -185,7 +186,11 @@ const getConfigSchema = () => ({
           view_filters: viewFilters,
         },
         required: ['name', 'label'],
-        oneOf: [{ required: ['files'] }, { required: ['folder', 'fields'] }],
+        oneOf: [
+          { required: ['files'] },
+          { required: ['folder', 'fields'] },
+          { required: ['file', 'fields'] },
+        ],
         if: { required: ['extension'] },
         then: {
           // Cannot infer format from extension.

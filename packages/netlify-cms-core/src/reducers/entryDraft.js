@@ -58,9 +58,10 @@ const entryDraftReducer = (state = Map(), action) => {
       return state.withMutations(state => {
         const backupDraftEntry = state.get('localBackup');
         const backupEntry = backupDraftEntry.get('entry');
+        const newRecord = !backupEntry.get('path') && !backupEntry.get('slug');
         state.delete('localBackup');
         state.set('entry', backupEntry);
-        state.setIn(['entry', 'newRecord'], !backupEntry.get('path'));
+        state.setIn(['entry', 'newRecord'], newRecord);
         state.set('fieldsMetaData', Map());
         state.set('fieldsErrors', Map());
         state.set('hasChanged', true);

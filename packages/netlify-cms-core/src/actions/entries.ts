@@ -4,7 +4,7 @@ import { actions as notifActions } from 'redux-notifications';
 import { serializeValues } from '../lib/serializeEntryValues';
 import { currentBackend, Backend } from '../backend';
 import { getIntegrationProvider } from '../integrations';
-import { selectIntegration, selectPublishedSlugs } from '../reducers';
+import { selectEntries, selectIntegration, selectPublishedSlugs } from '../reducers';
 import { selectFields, updateFieldByKey } from '../reducers/collections';
 import { selectCollectionEntriesCursor } from '../reducers/cursors';
 import { Cursor, ImplementationMediaFile } from 'netlify-cms-lib-util';
@@ -656,7 +656,9 @@ export function createEmptyDraft(collection: Collection, search: string) {
       await waitForMediaLibraryToLoad(dispatch, getState());
     }
 
-    let newEntry = createEntry(collection.get('name'), '', '', {
+    const path = collection.get('file') || '';
+
+    let newEntry = createEntry(collection.get('name'), '', path, {
       data: dataFields,
       mediaFiles: [],
     });
@@ -782,12 +784,14 @@ export function persistEntry(collection: Collection) {
     const serializedData = serializeValues(entryDraft.getIn(['entry', 'data']), fields);
     const serializedEntry = entry.set('data', serializedData);
     const serializedEntryDraft = entryDraft.set('entry', serializedEntry);
+    const entries = selectEntries(state, collection);
     dispatch(entryPersisting(collection, serializedEntry));
     return backend
       .persistEntry({
         config: state.config,
         collection,
         entryDraft: serializedEntryDraft,
+        entries,
         assetProxies,
         usedSlugs,
       })
@@ -829,10 +833,11 @@ export function deleteEntry(collection: Collection, slug: string) {
   return (dispatch: ThunkDispatch<State, {}, AnyAction>, getState: () => State) => {
     const state = getState();
     const backend = currentBackend(state.config);
+    const entries = selectEntries(state, collection);
 
     dispatch(entryDeleting(collection, slug));
     return backend
-      .deleteEntry(state, collection, slug)
+      .deleteEntry(state, collection, slug, entries)
       .then(() => {
         return dispatch(entryDeleted(collection, slug));
       })

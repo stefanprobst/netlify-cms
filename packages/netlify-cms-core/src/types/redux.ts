@@ -3,6 +3,7 @@ import { StaticallyTypedRecord } from './immutable';
 import { Map, List, OrderedMap } from 'immutable';
 import AssetProxy from '../valueObjects/AssetProxy';
 import { MediaFile as BackendMediaFile } from '../backend';
+import { FOLDER, FILES, FILE } from '../constants/collectionTypes';
 
 export type SlugConfig = StaticallyTypedRecord<{
   encoding: string;
@@ -142,13 +143,14 @@ export type CollectionFiles = List<CollectionFile>;
 export type ViewFilter = {
   label: string;
   field: string;
-  pattern: string;
+  pattern: string | boolean;
   id: string;
 };
 
 type CollectionObject = {
   name: string;
   folder?: string;
+  file?: string;
   files?: CollectionFiles;
   fields: EntryFields;
   isFetching: boolean;
@@ -158,7 +160,7 @@ type CollectionObject = {
   preview_path_date_field?: string;
   summary?: string;
   filter?: FilterRule;
-  type: 'file_based_collection' | 'folder_based_collection';
+  type: typeof FILES | typeof FOLDER | typeof FILE;
   extension?: string;
   format?: string;
   create?: boolean;
