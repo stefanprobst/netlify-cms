@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Netlify CMS</title>
+  </head>
+  <body>
+    <script>
+      window.CMS_MANUAL_INIT = true;
+    </script>
+    <script src="dist/netlify-cms.js"></script>
+    <script>
+      const { initCMS: init } = window;
+      init({
+        config: {
+          backend: {
+            name: 'github',
+            repo: 'owner/repo',
+          },
+          local_backend: true,
+          load_config_file: false,
+          media_folder: 'static/images',
+          public_folder: '/images',
+          collections: [
+            {
+              name: 'authors',
+              label: 'Authors',
+              label_singular: 'Author',
+              file: 'content/authors.yml',
+              create: true,
+              identifier_field: 'email',
+              slug: '{{slug}}',
+              media_folder: 'authors',
+              public_folder: 'authors',
+              fields: [
+                { name: 'name', label: 'Name' },
+                { name: 'email', label: 'Email' },
+                { name: 'avatar', label: 'Avatar', widget: 'image', required: false },
+              ],
+            },
+            {
+              name: 'posts',
+              label: 'Posts',
+              label_singular: 'Post',
+              folder: 'content/posts',
+              create: true,
+              slug: '{{slug}}',
+              path: '{{slug}}/index',
+              media_folder: 'images',
+              public_folder: 'images',
+              fields: [
+                { name: 'title', label: 'Title' },
+                {
+                  name: 'authors',
+                  label: 'Authors',
+                  widget: 'relation',
+                  collection: 'authors',
+                  valueField: 'email',
+                  searchFields: ['name'],
+                  displayFields: ['name'],
+                  multiple: true,
+                },
+                { name: 'body', label: 'Body', widget: 'markdown' },
+              ],
+            },
+          ],
+        },
+      });
+    </script>
+  </body>
+</html>
