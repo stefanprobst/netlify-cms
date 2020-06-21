@@ -5,6 +5,10 @@ import {
   parseDateFromEntry,
   extractTemplateVars,
 } from '../stringTemplate';
+
+jest.mock('uuid/v4', () => () => '1f80bebd-c475-4f39-b549-95f92381fc8b');
+jest.spyOn(global.Date, 'now').mockReturnValue(1592734850417);
+
 describe('stringTemplate', () => {
   describe('keyToPathArray', () => {
     it('should return array of length 1 with simple path', () => {
@@ -88,6 +92,14 @@ describe('stringTemplate', () => {
 
     it('should error on missing date', () => {
       expect(() => compileStringTemplate('{{year}}')).toThrowError();
+    });
+
+    it('should compile uuid variable', () => {
+      expect(compileStringTemplate('{{uuid}}')).toBe('1f80bebd-c475-4f39-b549-95f92381fc8b');
+    });
+
+    it('should compile timestamp variable', () => {
+      expect(compileStringTemplate('{{timestamp}}')).toBe('1592734850417');
     });
 
     it('return compiled template', () => {

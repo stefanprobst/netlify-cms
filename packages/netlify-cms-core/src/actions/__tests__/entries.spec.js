@@ -16,6 +16,7 @@ jest.mock('netlify-cms-lib-util');
 jest.mock('../mediaLibrary');
 jest.mock('../../reducers/entries');
 jest.mock('../../reducers/entryDraft');
+jest.mock('uuid/v4', () => () => '1f80bebd-c475-4f39-b549-95f92381fc8b');
 
 const middlewares = [thunk];
 const mockStore = configureMockStore(middlewares);
@@ -294,6 +295,19 @@ describe('entries', () => {
         },
       ]);
       expect(createEmptyDraftData(fields)).toEqual({});
+    });
+
+    it('should compile template for default value', () => {
+      const fields = fromJS([
+        {
+          name: 'id',
+          widget: 'string',
+          default: 'post-{{uuid}}',
+        },
+      ]);
+      expect(createEmptyDraftData(fields)).toEqual({
+        id: 'post-1f80bebd-c475-4f39-b549-95f92381fc8b',
+      });
     });
   });
 

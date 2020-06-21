@@ -30,6 +30,7 @@ import { selectIsFetching, selectEntriesSortFields, selectEntryByPath } from '..
 import { selectCustomPath } from '../reducers/entryDraft';
 import { navigateToEntry } from '../routing/history';
 import { getProcessSegment } from '../lib/formatters';
+import { stringTemplate } from 'netlify-cms-lib-widgets';
 
 const { notifSend } = notifActions;
 
@@ -696,7 +697,12 @@ export function createEmptyDraftData(fields: EntryFields, withNameKey = true) {
       const subfields = item.get('field') || item.get('fields');
       const list = item.get('widget') == 'list';
       const name = item.get('name');
-      const defaultValue = item.get('default', null);
+      const _defaultValue = item.get('default', null);
+      // TODO: List
+      const defaultValue =
+        _defaultValue && typeof _defaultValue === 'string'
+          ? stringTemplate.compileStringTemplate(_defaultValue, new Date())
+          : _defaultValue;
       const isEmptyDefaultValue = (val: unknown) => [[{}], {}].some(e => isEqual(val, e));
 
       if (List.isList(subfields)) {

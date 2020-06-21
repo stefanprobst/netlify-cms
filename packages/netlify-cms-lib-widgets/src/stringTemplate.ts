@@ -1,6 +1,7 @@
 import moment from 'moment';
 import { Map } from 'immutable';
 import { basename, extname } from 'path';
+import uuid from 'uuid/v4';
 
 const FIELD_PREFIX = 'fields.';
 const templateContentPattern = '[^}{]+';
@@ -102,6 +103,10 @@ export function compileStringTemplate(
         replacement = dateParsers[key](date as Date);
       } else if (key === 'slug') {
         replacement = identifier;
+      } else if (key === 'uuid') {
+        replacement = uuid();
+      } else if (key === 'timestamp') {
+        replacement = Date.now();
       } else {
         replacement = data.getIn(keyToPathArray(key), '') as string;
       }
